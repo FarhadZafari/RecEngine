@@ -88,6 +88,7 @@ public abstract class AbstractDataModel extends Configured implements DataModel 
         String splitter = conf.get("data.model.splitter");
         try {
         	if (dataSplitter == null){
+                        System.out.println(DriverClassUtil.getClass(splitter));
         		dataSplitter = (DataSplitter) ReflectionUtil.newInstance(DriverClassUtil.getClass(splitter), conf);	
         	}
             if (dataSplitter != null) {

@@ -1,19 +1,17 @@
 /**
  * Copyright (C) 2016 LibRec
  * <p>
- * This file is part of LibRec.
- * LibRec is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This file is part of LibRec. LibRec is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  * <p>
- * LibRec is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * LibRec is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  * <p>
- * You should have received a copy of the GNU General Public License
- * along with LibRec. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along with
+ * LibRec. If not, see <http://www.gnu.org/licenses/>.
  */
 package net.librec.data.splitter;
 
@@ -25,7 +23,6 @@ import net.librec.data.convertor.ArffDataConvertor;
 import net.librec.data.convertor.TextDataConvertor;
 import net.librec.math.structure.SparseMatrix;
 import net.librec.math.structure.SparseVector;
-import net.librec.math.structure.TensorEntry;
 import net.librec.math.structure.VectorEntry;
 
 import java.io.IOException;
@@ -48,16 +45,18 @@ public class GivenTestSetDataSplitter extends AbstractDataSplitter {
      * Empty constructor.
      */
     public GivenTestSetDataSplitter() {
+        System.out.println("***************net.librec.data.splitter.GivenTestSetDataSplitter called***************");
     }
 
     /**
-     * Initializes a newly created {@code GivenTestSetDataSplitter} object
-     * with configuration.
+     * Initializes a newly created {@code GivenTestSetDataSplitter} object with
+     * configuration.
      *
      * @param convertor data convertor
-     * @param conf      the configuration for the splitter.
+     * @param conf the configuration for the splitter.
      */
     public GivenTestSetDataSplitter(DataConvertor convertor, Configuration conf) {
+        System.out.println("***************net.librec.data.splitter.GivenTestSetDataSplitter called***************");
         this.dataConvertor = convertor;
         this.conf = conf;
     }
@@ -69,6 +68,7 @@ public class GivenTestSetDataSplitter extends AbstractDataSplitter {
      */
     @Override
     public void splitData() throws LibrecException {
+        System.out.println("***************net.librec.data.splitter.splitData called***************");
         DataConvertor testConvertor = null;
         String dataFormat = conf.get("data.model.format");
         switch (dataFormat.toLowerCase()) {
@@ -76,6 +76,11 @@ public class GivenTestSetDataSplitter extends AbstractDataSplitter {
                 preferenceMatrix = dataConvertor.getPreferenceMatrix();
                 trainMatrix = new SparseMatrix(preferenceMatrix);
                 testMatrix = new SparseMatrix(preferenceMatrix);
+                
+                //System.out.println(preferenceMatrix);
+
+                System.out.println("Size of preference matrix before reading test set is: " + preferenceMatrix.colData.length);
+
                 testConvertor = new TextDataConvertor(conf.get(Configured.CONF_DATA_COLUMN_FORMAT, "UIR"),
                         conf.get(Configured.CONF_DFS_DATA_DIR) + "/" + conf.get("data.testset.path"),
                         conf.getDouble("data.convert.binarize.threshold", -1.0),
@@ -86,10 +91,18 @@ public class GivenTestSetDataSplitter extends AbstractDataSplitter {
                 } catch (IOException e) {
                     throw new LibrecException(e);
                 }
+                
+                //System.out.println(testConvertor.getPreferenceMatrix());
+                System.out.println("Size of preference matrix for test set is: " + testConvertor.getPreferenceMatrix().colData.length);
+                //System.out.println("testMatrix before being messed up is: " + testMatrix);
+                
+                //This was a bug! We are not splitting the data into train set and test set, so this is ridiculous!
+                /*
                 for (int u = 0, um = preferenceMatrix.numRows(); u < um; u++) {
                     SparseVector uv = preferenceMatrix.row(u);
                     for (VectorEntry j : uv) {
                         if (testConvertor.getPreferenceMatrix().get(u, j.index()) == 0) {
+                            System.out.println(u + " " + j.index());
                             testMatrix.set(u, j.index(), 0.0);
                         } else {
                             trainMatrix.set(u, j.index(), 0.0);
@@ -98,7 +111,10 @@ public class GivenTestSetDataSplitter extends AbstractDataSplitter {
                 }
                 SparseMatrix.reshape(trainMatrix);
                 SparseMatrix.reshape(testMatrix);
-
+                */
+                
+                //System.out.println("testMatrix after being messed up is: " + testMatrix);
+                
                 break;
             case "arff":
                 testConvertor = new ArffDataConvertor(

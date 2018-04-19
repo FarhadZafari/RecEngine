@@ -1,0 +1,6 @@
+
+python2.7 ~/Farhad/Projects/RecSys-Research/per-recs/off-eval/eval/eval_algorithm.py \
+--answer-pickle-path /Users/fzafari/librec-latest/core/sg.answers \
+--rec-pickle-path /Users/fzafari/librec-latest/core/sg.pickle \
+--rec-size 5 | tee /Users/fzafari/librec-latest/core/output_svd.txt
+

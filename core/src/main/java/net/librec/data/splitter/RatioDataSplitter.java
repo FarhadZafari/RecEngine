@@ -1,19 +1,17 @@
 /**
  * Copyright (C) 2016 LibRec
  * <p>
- * This file is part of LibRec.
- * LibRec is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This file is part of LibRec. LibRec is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  * <p>
- * LibRec is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * LibRec is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  * <p>
- * You should have received a copy of the GNU General Public License
- * along with LibRec. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along with
+ * LibRec. If not, see <http://www.gnu.org/licenses/>.
  */
 package net.librec.data.splitter;
 
@@ -39,28 +37,32 @@ import java.util.List;
  */
 public class RatioDataSplitter extends AbstractDataSplitter {
 
-    /** The rate dataset for splitting */
+    /**
+     * The rate dataset for splitting
+     */
     private SparseMatrix preferenceMatrix;
 
-    /** The datetime dataset for splitting */
+    /**
+     * The datetime dataset for splitting
+     */
     private SparseMatrix datetimeMatrix;
 
     /**
      * Empty constructor.
      */
     public RatioDataSplitter() {
+        System.out.println("***************net.librec.data.splitter.RatioDataSplitter called***************");
     }
 
     /**
-     * Initializes a newly created {@code RatioDataSplitter} object
-     * with convertor and configuration.
+     * Initializes a newly created {@code RatioDataSplitter} object with
+     * convertor and configuration.
      *
-     * @param dataConvertor
-     *          the convertor for the splitter.
-     * @param conf
-     *          the configuration for the splitter.
+     * @param dataConvertor the convertor for the splitter.
+     * @param conf the configuration for the splitter.
      */
     public RatioDataSplitter(DataConvertor dataConvertor, Configuration conf) {
+        System.out.println("***************net.librec.data.splitter.RatioDataSplitter called***************");
         this.dataConvertor = dataConvertor;
         this.conf = conf;
     }
@@ -72,6 +74,7 @@ public class RatioDataSplitter extends AbstractDataSplitter {
      */
     @Override
     public void splitData() throws LibrecException {
+        System.out.println("***************net.librec.data.splitter.splitData called***************");
         this.preferenceMatrix = dataConvertor.getPreferenceMatrix();
         this.datetimeMatrix = dataConvertor.getDatetimeMatrix();
         String splitter = conf.get("data.splitter.ratio");
@@ -131,7 +134,7 @@ public class RatioDataSplitter extends AbstractDataSplitter {
             testMatrix = new SparseMatrix(preferenceMatrix);
             trainMatrix = new SparseMatrix(preferenceMatrix);
 
-            for(MatrixEntry matrixEntry: preferenceMatrix){
+            for (MatrixEntry matrixEntry : preferenceMatrix) {
                 int userIdx = matrixEntry.row();
                 int itemIdx = matrixEntry.column();
 
@@ -162,8 +165,9 @@ public class RatioDataSplitter extends AbstractDataSplitter {
             trainMatrix = new SparseMatrix(preferenceMatrix);
 
             List<RatingContext> rcs = new ArrayList<>(datetimeMatrix.size());
-            for (MatrixEntry me : preferenceMatrix)
+            for (MatrixEntry me : preferenceMatrix) {
                 rcs.add(new RatingContext(me.row(), me.column(), (long) datetimeMatrix.get(me.row(), me.column())));
+            }
             Collections.sort(rcs);
 
             int trainSize = (int) (rcs.size() * ratio);
@@ -172,10 +176,11 @@ public class RatioDataSplitter extends AbstractDataSplitter {
                 int u = rc.getUser();
                 int j = rc.getItem();
 
-                if (i < trainSize)
+                if (i < trainSize) {
                     testMatrix.set(u, j, 0.0);
-                else
+                } else {
                     trainMatrix.set(u, j, 0.0);
+                }
             }
 
             rcs = null;
@@ -189,7 +194,7 @@ public class RatioDataSplitter extends AbstractDataSplitter {
      * ratings where {@code ratio} percentage of ratings are preserved for each
      * user, and the rest are used as the testing data.
      *
-     * @param ratio  the ratio of training data
+     * @param ratio the ratio of training data
      */
     public void getRatioByUser(double ratio) {
 
@@ -216,14 +221,13 @@ public class RatioDataSplitter extends AbstractDataSplitter {
         }
     }
 
-
     /**
      * Split ratings into two parts: the training set consisting of user-item
      * ratings where a fixed number of ratings corresponding to the given
      * {@code ratio} are preserved for each user as training data with the rest
      * as test.
      *
-     *  @param ratio  the ratio of training data
+     * @param ratio the ratio of training data
      */
     public void getFixedRatioByUser(double ratio) {
 
@@ -286,10 +290,11 @@ public class RatioDataSplitter extends AbstractDataSplitter {
                     RatingContext rc = rcs.get(i);
                     int u = rc.getUser();
                     int j = rc.getItem();
-                    if (i < trainSize)
+                    if (i < trainSize) {
                         testMatrix.set(u, j, 0.0);
-                    else
+                    } else {
                         trainMatrix.set(u, j, 0.0);
+                    }
                 }
             }
             SparseMatrix.reshape(trainMatrix);
@@ -303,7 +308,7 @@ public class RatioDataSplitter extends AbstractDataSplitter {
      * ratings where {@code ratio} percentage of ratings are preserved for each
      * item, and the rest are used as the testing data.
      *
-     * @param ratio  the ratio of training data
+     * @param ratio the ratio of training data
      */
     public void getRatioByItem(double ratio) {
 
@@ -358,10 +363,11 @@ public class RatioDataSplitter extends AbstractDataSplitter {
                     int u = rc.getUser();
                     int j = rc.getItem();
 
-                    if (i < trainSize)
+                    if (i < trainSize) {
                         testMatrix.set(u, j, 0.0);
-                    else
+                    } else {
                         trainMatrix.set(u, j, 0.0);
+                    }
                 }
             }
             SparseMatrix.reshape(testMatrix);
@@ -373,7 +379,7 @@ public class RatioDataSplitter extends AbstractDataSplitter {
      * Split the rating into : (train-ratio) training, (validation-ratio)
      * validation, and test three subsets.
      *
-     * @param trainRatio      training ratio
+     * @param trainRatio training ratio
      * @param validationRatio validation ratio
      */
     public void getRatio(double trainRatio, double validationRatio) {

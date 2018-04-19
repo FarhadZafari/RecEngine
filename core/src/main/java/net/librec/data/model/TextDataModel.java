@@ -64,6 +64,7 @@ public class TextDataModel extends AbstractDataModel implements DataModel {
     public void buildConvert() throws LibrecException {
 //        String inputDataPath = conf.get(Configured.CONF_DFS_DATA_DIR) + "/" + conf.get(Configured.CONF_DATA_INPUT_PATH);
         String[] inputDataPath = conf.get(Configured.CONF_DATA_INPUT_PATH).trim().split(" ");
+        //System.out.println(inputDataPath[0]);
         for(int i = 0 ; i < inputDataPath.length; i ++){
             inputDataPath[i]=conf.get(Configured.CONF_DFS_DATA_DIR)+"/"+inputDataPath[i];
         }

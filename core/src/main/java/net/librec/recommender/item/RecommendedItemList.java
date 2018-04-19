@@ -236,8 +236,7 @@ public class RecommendedItemList implements RecommendedList, Serializable {
      * @param topN    top n ranked Items
      */
     public void topNRankItemsByUser(int userIdx, int topN) {
-        setItemIdxList(userIdx,
-                Lists.sortItemEntryListTopK(getItemIdxListByUserIdx(userIdx), true, topN));
+        setItemIdxList(userIdx, Lists.sortItemEntryListTopK(getItemIdxListByUserIdx(userIdx), true, topN));
     }
 
     /**

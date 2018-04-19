@@ -1,23 +1,25 @@
 /**
  * Copyright (C) 2016 LibRec
  * <p>
- * This file is part of LibRec.
- * LibRec is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This file is part of LibRec. LibRec is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  * <p>
- * LibRec is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * LibRec is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  * <p>
- * You should have received a copy of the GNU General Public License
- * along with LibRec. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along with
+ * LibRec. If not, see <http://www.gnu.org/licenses/>.
  */
 package net.librec.recommender;
 
 import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 import net.librec.common.LibrecException;
 import net.librec.conf.Configuration;
 import net.librec.data.DataModel;
@@ -33,6 +35,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.util.*;
+import me.tongfei.progressbar.ProgressBar;
 
 /**
  * Abstract Recommender Methods
@@ -40,6 +43,7 @@ import java.util.*;
  * @author WangYuFeng and Wang Keqiang
  */
 public abstract class AbstractRecommender implements Recommender {
+
     /**
      * LOG
      */
@@ -48,12 +52,12 @@ public abstract class AbstractRecommender implements Recommender {
     /**
      * is ranking or rating
      */
-    protected boolean isRanking;
+    public boolean isRanking;
 
     /**
      * topN
      */
-    protected int topN;
+    public int topN;
 
     /**
      * conf
@@ -144,6 +148,10 @@ public abstract class AbstractRecommender implements Recommender {
      * objective loss
      */
     protected double loss, lastLoss = 0.0d;
+    
+    //**************************************************************************
+    protected double total_error = 0.0d;
+    //**************************************************************************
 
     /**
      * whether to adjust learning rate automatically
@@ -164,7 +172,7 @@ public abstract class AbstractRecommender implements Recommender {
         conf = context.getConf();
         isRanking = conf.getBoolean("rec.recommender.isranking");
         if (isRanking) {
-            topN = conf.getInt("rec.recommender.ranking.topn", 10);
+            topN = conf.getInt("rec.recommender.ranking.topn", 5);
             if (this.topN <= 0) {
                 throw new IndexOutOfBoundsException("rec.recommender.ranking.topn should be more than 0!");
             }
@@ -218,7 +226,9 @@ public abstract class AbstractRecommender implements Recommender {
         this.context = context;
         setup();
         LOG.info("Job Setup completed.");
+        long start = System.currentTimeMillis();
         trainModel();
+        LOG.info("The model training finishes in: " + (System.currentTimeMillis() - start) + " milliseconds!");
         LOG.info("Job Train completed.");
         this.recommendedList = recommend();
         LOG.info("Job End.");
@@ -226,11 +236,10 @@ public abstract class AbstractRecommender implements Recommender {
     }
 
     /**
-     * recommend
-     * * predict the ranking scores or ratings in the test data
+     * recommend * predict the ranking scores or ratings in the test data
      *
      * @return predictive ranking score or rating matrix
-     * @throws LibrecException  if error occurs during recommending
+     * @throws LibrecException if error occurs during recommending
      */
     protected RecommendedList recommend() throws LibrecException {
         if (isRanking && topN > 0) {
@@ -242,16 +251,18 @@ public abstract class AbstractRecommender implements Recommender {
     }
 
     /**
-     * recommend
-     * * predict the ranking scores in the test data
+     * recommend * predict the ranking scores in the test data
      *
      * @return predictive rating matrix
      * @throws LibrecException if error occurs during recommending
      */
-    protected RecommendedList recommendRank() throws LibrecException {
+    public RecommendedList recommendRank() throws LibrecException {
         recommendedList = new RecommendedItemList(numUsers - 1, numUsers);
 
+        ProgressBar pb = new ProgressBar("recommendRank", numUsers);
+        pb.start();
         for (int userIdx = 0; userIdx < numUsers; ++userIdx) {
+            //System.out.println(userIdx + "/" + numUsers);
             Set<Integer> itemSet = trainMatrix.getColumnsSet(userIdx);
             for (int itemIdx = 0; itemIdx < numItems; ++itemIdx) {
                 if (itemSet.contains(itemIdx)) {
@@ -263,19 +274,42 @@ public abstract class AbstractRecommender implements Recommender {
                 }
                 recommendedList.addUserItemIdx(userIdx, itemIdx, predictRating);
             }
+            pb.step();
             recommendedList.topNRankItemsByUser(userIdx, topN);
         }
-
-        if(recommendedList.size()==0){
+        pb.stop();
+        if (recommendedList.size() == 0) {
             throw new IndexOutOfBoundsException("No item is recommended, there is something error in the recommendation algorithm! Please check it!");
         }
 
         return recommendedList;
     }
 
+    //***************************************************************************************************
+    //This function retruns the recommendations for a single user.
+    public RecommendedList recommendRank(int userIdx, int numRecs) throws LibrecException {
+        RecommendedItemList list = new RecommendedItemList(0, 1);
+        Set<Integer> itemSet = trainMatrix.getColumnsSet(userIdx);
+        for (int itemIdx = 0; itemIdx < numItems; ++itemIdx) {
+            if (itemSet.contains(itemIdx)) {
+                continue;
+            }
+            double predictRating = predict(userIdx, itemIdx);
+            if (Double.isNaN(predictRating)) {
+                continue;
+            }
+            list.addUserItemIdx(userIdx, itemIdx, predictRating);
+        }
+        list.topNRankItemsByUser(userIdx, numRecs);
+        if (list.size() == 0) {
+            throw new IndexOutOfBoundsException("No item is recommended, there is something error in the recommendation algorithm! Please check it!");
+        }
+        return list;
+    }
+    //***************************************************************************************************
+
     /**
-     * recommend
-     * * predict the ratings in the test data
+     * recommend * predict the ratings in the test data
      *
      * @return predictive rating matrix
      * @throws LibrecException if error occurs during recommending
@@ -308,10 +342,9 @@ public abstract class AbstractRecommender implements Recommender {
      */
     protected abstract double predict(int userIdx, int itemIdx) throws LibrecException;
 
-
     /**
-     * predict a specific rating for user userIdx on item itemIdx. It is useful for evalution which requires predictions are
-     * bounded.
+     * predict a specific rating for user userIdx on item itemIdx. It is useful
+     * for evalution which requires predictions are bounded.
      *
      * @param userIdx user index
      * @param itemIdx item index
@@ -455,17 +488,18 @@ public abstract class AbstractRecommender implements Recommender {
      * <li>check if converged</li>
      * <li>if not, adjust learning rate</li>
      * </ol>
+     *
      * @param iter current iteration
      * @return boolean: true if it is converged; false otherwise
      * @throws LibrecException if error occurs
      */
-    protected boolean isConverged(int iter) throws LibrecException{
+    protected boolean isConverged(int iter) throws LibrecException {
         float delta_loss = (float) (lastLoss - loss);
 
         // print out debug info
         if (verbose) {
             String recName = getClass().getSimpleName().toString();
-            String info = recName + " iter " + iter + ": loss = " + loss + ", delta_loss = " + delta_loss;
+            String info = recName + " iter " + iter + ": loss = " + loss + ", RMSE on train set = " + total_error + ", delta_loss = " + delta_loss;
             LOG.info(info);
         }
 

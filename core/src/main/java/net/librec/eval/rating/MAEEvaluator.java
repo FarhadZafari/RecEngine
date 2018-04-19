@@ -54,6 +54,8 @@ public class MAEEvaluator extends AbstractRecommenderEvaluator {
 
                     double realRating = testMatrixEntry.get();
                     double predictRating = userItemRatingEntry.getValue();
+                    
+                    //System.out.println(predictRating + " vs " + realRating);
                     mae += Math.abs(realRating - predictRating);
                     testSize++;
 

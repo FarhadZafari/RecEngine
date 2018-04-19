@@ -1,0 +1,25 @@
+Loading recommendations..
+Loading answers..
+Evaluating recommendations..
++---------------------+----------+
+| Metric              | Estimate |
++---------------------+----------+
+| #Users:             |  15570   |
+| #Recommended users: |  10779   |
+| User coverage:      |  69.23%  |
+| #Items:             |  11699   |
+| #Recommended items: |  11393   |
+| Item coverage:      |  97.38%  |
+| Hits/Users          |  15.32%  |
+| Hit Items/Items     |  9.95%   |
+| Hit Users/Users     |  11.73%  |
+| Hit Recs/Recs       |  16.95%  |
+| Num Hits            |   2385   |
+| Num Hit Items       |   1164   |
+| Num Hit Users       |   1827   |
+| Num Hit Recs        |   1827   |
+| Num Empty Recs      |   4791   |
+| Num Non-empty Recs  |  10779   |
+| MAP@5               |  1.82%   |
++---------------------+----------+
+

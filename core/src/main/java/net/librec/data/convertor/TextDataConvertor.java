@@ -1,19 +1,17 @@
 /**
  * Copyright (C) 2016 LibRec
  * <p>
- * This file is part of LibRec.
- * LibRec is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This file is part of LibRec. LibRec is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  * <p>
- * LibRec is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * LibRec is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+ * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  * <p>
- * You should have received a copy of the GNU General Public License
- * along with LibRec. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License along with
+ * LibRec. If not, see <http://www.gnu.org/licenses/>.
  */
 package net.librec.data.convertor;
 
@@ -34,6 +32,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import me.tongfei.progressbar.ProgressBar;
 
 /**
  * A <tt>TextDataConvertor</tt> is a class to convert a data file from CSV
@@ -69,8 +68,9 @@ public class TextDataConvertor extends AbstractDataConvertor {
     private String inputDataPath;
 
     /**
-     * the threshold to binarize a rating. If a rating is greater than the threshold, the value will be 1;
-     * otherwise 0. To disable this appender, i.e., keep the original rating value, set the threshold a negative value
+     * the threshold to binarize a rating. If a rating is greater than the
+     * threshold, the value will be 1; otherwise 0. To disable this appender,
+     * i.e., keep the original rating value, set the threshold a negative value
      */
     private double binThold = -1.0;
 
@@ -114,7 +114,7 @@ public class TextDataConvertor extends AbstractDataConvertor {
      * path and format of the input data file.
      *
      * @param dataColumnFormat the path of the input data file
-     * @param inputDataPath    the format of the input data file
+     * @param inputDataPath the format of the input data file
      */
     public TextDataConvertor(String dataColumnFormat, String inputDataPath) {
         this(dataColumnFormat, inputDataPath, -1.0);
@@ -125,10 +125,11 @@ public class TextDataConvertor extends AbstractDataConvertor {
      * path and format of the input data file.
      *
      * @param dataColumnFormat the path of the input data file
-     * @param inputDataPath    the format of the input data file
-     * @param binThold         the threshold to binarize a rating. If a rating is greater than the threshold, the value will be 1;
-     *                         otherwise 0. To disable this appender, i.e., keep the original rating value, set the threshold a
-     *                         negative value
+     * @param inputDataPath the format of the input data file
+     * @param binThold the threshold to binarize a rating. If a rating is
+     * greater than the threshold, the value will be 1; otherwise 0. To disable
+     * this appender, i.e., keep the original rating value, set the threshold a
+     * negative value
      */
     public TextDataConvertor(String dataColumnFormat, String inputDataPath, double binThold) {
         this.dataColumnFormat = dataColumnFormat;
@@ -141,15 +142,16 @@ public class TextDataConvertor extends AbstractDataConvertor {
      * path and format of the input data file.
      *
      * @param dataColumnFormat the path of the input data file
-     * @param inputDataPath    the format of the input data file
-     * @param binThold         the threshold to binarize a rating. If a rating is greater than the threshold, the value will be 1;
-     *                         otherwise 0. To disable this appender, i.e., keep the original rating value, set the threshold a
-     *                         negative value
-     * @param userIds          userId to userIndex map
-     * @param itemIds          itemId to itemIndex map
+     * @param inputDataPath the format of the input data file
+     * @param binThold the threshold to binarize a rating. If a rating is
+     * greater than the threshold, the value will be 1; otherwise 0. To disable
+     * this appender, i.e., keep the original rating value, set the threshold a
+     * negative value
+     * @param userIds userId to userIndex map
+     * @param itemIds itemId to itemIndex map
      */
     public TextDataConvertor(String dataColumnFormat, String inputDataPath, double binThold,
-                             BiMap<String, Integer> userIds, BiMap<String, Integer> itemIds) {
+            BiMap<String, Integer> userIds, BiMap<String, Integer> itemIds) {
         this(dataColumnFormat, inputDataPath, binThold);
         this.userIds = userIds;
         this.itemIds = itemIds;
@@ -169,11 +171,11 @@ public class TextDataConvertor extends AbstractDataConvertor {
      * duplicated lines.
      *
      * @param dataColumnFormat the format of input data file
-     * @param inputDataPath    the path of input data file
-     * @param binThold         the threshold to binarize a rating. If a rating is greater
-     *                         than the threshold, the value will be 1; otherwise 0. To
-     *                         disable this appender, i.e., keep the original rating value,
-     *                         set the threshold a negative value
+     * @param inputDataPath the path of input data file
+     * @param binThold the threshold to binarize a rating. If a rating is
+     * greater than the threshold, the value will be 1; otherwise 0. To disable
+     * this appender, i.e., keep the original rating value, set the threshold a
+     * negative value
      * @throws IOException if the <code>inputDataPath</code> is not valid.
      */
     private void readData(String dataColumnFormat, String inputDataPath, double binThold) throws IOException {
@@ -228,6 +230,8 @@ public class TextDataConvertor extends AbstractDataConvertor {
             String bufferLine = "";
             byte[] bytes = new byte[BSIZE];
 
+            ProgressBar pb = new ProgressBar("Reading " + dataFile, 100);
+            pb.start();
             while ((len = fileRead.read(buffer)) != -1) {
                 readingOneFileByte += len;
                 loadDataFileRate = readingOneFileByte / (float) fileRead.size();
@@ -240,6 +244,7 @@ public class TextDataConvertor extends AbstractDataConvertor {
                 String[] bufferData = bufferLine.split("(\n)+");
                 boolean isComplete = bufferLine.endsWith("\n");
                 int loopLength = isComplete ? bufferData.length : bufferData.length - 1;
+
                 for (int i = 0; i < loopLength; i++) {
                     String line = bufferData[i];
                     String[] data = line.trim().split("[ \t,]+");
@@ -278,6 +283,7 @@ public class TextDataConvertor extends AbstractDataConvertor {
                         timeTable.put(row, col, timestamp);
                     }
                 }
+                pb.step();
                 if (!isComplete) {
                     bufferLine = bufferData[bufferData.length - 1];
                 } else {
@@ -285,14 +291,21 @@ public class TextDataConvertor extends AbstractDataConvertor {
                 }
                 buffer.clear();
             }
+            pb.stop();
             fileRead.close();
             fis.close();
         }
         int numRows = numUsers(), numCols = numItems();
         // build rating matrix
         preferenceMatrix = new SparseMatrix(numRows, numCols, dataTable, colMap);
-        if (timeTable != null)
+
+        System.out.println("***************************************************************************************************");
+        System.out.println("Number of elements in the preference matrix is: " + preferenceMatrix.size());
+        System.out.println("***************************************************************************************************");
+
+        if (timeTable != null) {
             datetimeMatrix = new SparseMatrix(numRows, numCols, timeTable, colMap);
+        }
         // release memory of data table
         dataTable = null;
         timeTable = null;
